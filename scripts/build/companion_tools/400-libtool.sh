@@ -3,8 +3,7 @@
 CT_LIBTOOL_VERSION=2.2.6b
 
 do_companion_tools_libtool_get() {
-    CT_GetFile "libtool-${CT_LIBTOOL_VERSION}" \
-               {ftp,http}://ftp.gnu.org/gnu/libtool
+    CT_GetFile "libtool-${CT_LIBTOOL_VERSION}" http://ftp.gnu.org/gnu/libtool
 }
 
 do_companion_tools_libtool_extract() {
@@ -17,7 +16,7 @@ do_companion_tools_libtool_build() {
     CT_DoStep EXTRA "Installing libtool"
     mkdir -p "${CT_BUILD_DIR}/build-libtool"
     CT_Pushd "${CT_BUILD_DIR}/build-libtool"
-    
+
     CT_DoExecLog CFG \
     "${CT_SRC_DIR}/libtool-${CT_LIBTOOL_VERSION}/configure" \
         --prefix="${CT_BUILDTOOLS_PREFIX_DIR}"
