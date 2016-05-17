@@ -7,10 +7,9 @@ CT_DoKernelTupleValues() {
         CT_TARGET_KERNEL="linux"
     else
         # Some no-mmu linux targets requires a -uclinux tuple (like m68k/cf),
-        # while others must have a -linux tuple (like bfin).  Other targets
+        # while others must have a -linux tuple.  Other targets
         # should be added here when someone starts to care about them.
         case "${CT_ARCH}" in
-            blackfin)   CT_TARGET_KERNEL="linux" ;;
             m68k)       CT_TARGET_KERNEL="uclinux" ;;
             *)          CT_Abort "Unsupported no-mmu arch '${CT_ARCH}'"
         esac
@@ -33,23 +32,24 @@ do_kernel_get() {
                      "${CT_KERNEL_LINUX_CUSTOM_LOCATION}"
     else # Not a custom tarball
         case "${CT_KERNEL_VERSION}" in
-            2.6.*.*|3.*.*)
+            2.6.*.*|3.*.*|4.*.*)
                 # 4-part versions (for 2.6 stables and long-terms), and
-                # 3-part versions (for 3.x.y stables and long-terms),
+                # 3-part versions (for 3.x.y and 4.x.y stables and long-terms)
                 # we need to trash the last digit
                 k_ver="${CT_KERNEL_VERSION%.*}"
                 ;;
-            2.6.*|3.*)
+            2.6.*|3.*|4.*)
                 # 3-part version (for 2.6.x initial releases), and 2-part
-                # versions (for 3.x initial releases), use all of it
+                # versions (for 3.x and 4.x initial releases), use all of it
                 k_ver="${CT_KERNEL_VERSION}"
                 ;;
         esac
         case "${CT_KERNEL_VERSION}" in
             2.6.*)  rel_dir=v2.6;;
             3.*)    rel_dir=v3.x;;
+            4.*)    rel_dir=v4.x;;
         esac
-        korg_base="http://ftp.kernel.org/pub/linux/kernel/${rel_dir}"
+        korg_base="http://www.kernel.org/pub/linux/kernel/${rel_dir}"
         CT_GetFile "linux-${CT_KERNEL_VERSION}"         \
                    "${korg_base}"                       \
                    "${korg_base}/longterm/v${k_ver}"    \
@@ -117,7 +117,8 @@ do_kernel_install() {
 
     CT_DoLog EXTRA "Installing kernel headers"
     CT_DoExecLog ALL                                    \
-    make -C "${kernel_path}"                            \
+    ${make} -C "${kernel_path}"                         \
+         CROSS_COMPILE="${CT_TARGET}-"                  \
          O="${CT_BUILD_DIR}/build-kernel-headers"       \
          ARCH=${kernel_arch}                            \
          INSTALL_HDR_PATH="${CT_SYSROOT_DIR}/usr"       \
@@ -127,7 +128,8 @@ do_kernel_install() {
     if [ "${CT_KERNEL_LINUX_INSTALL_CHECK}" = "y" ]; then
         CT_DoLog EXTRA "Checking installed headers"
         CT_DoExecLog ALL                                    \
-        make -C "${kernel_path}"                            \
+        ${make} -C "${kernel_path}"                         \
+             CROSS_COMPILE="${CT_TARGET}-"                  \
              O="${CT_BUILD_DIR}/build-kernel-headers"       \
              ARCH=${kernel_arch}                            \
              INSTALL_HDR_PATH="${CT_SYSROOT_DIR}/usr"       \

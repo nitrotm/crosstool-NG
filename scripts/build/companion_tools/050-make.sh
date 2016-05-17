@@ -3,7 +3,8 @@
 CT_MAKE_VERSION=3.81
 
 do_companion_tools_make_get() {
-    CT_GetFile "make-${CT_MAKE_VERSION}" http://ftp.gnu.org/gnu/make
+    CT_GetFile "make-${CT_MAKE_VERSION}"        \
+        {http,ftp,https}://ftp.gnu.org/gnu/make
 }
 
 do_companion_tools_make_extract() {
@@ -19,8 +20,11 @@ do_companion_tools_make_build() {
 
     CT_DoExecLog CFG "${CT_SRC_DIR}/make-${CT_MAKE_VERSION}/configure" \
                      --prefix="${CT_BUILDTOOLS_PREFIX_DIR}"
-    CT_DoExecLog ALL make
-    CT_DoExecLog ALL make install
+    CT_DoExecLog ALL ${make}
+    CT_DoExecLog ALL ${make} install
+    if [ "${CT_COMP_TOOLS_make_gmake}" = "y" ]; then
+        CT_DoExecLog ALL ln -sv ${make} "${CT_BUILDTOOLS_PREFIX_DIR}/bin/gmake"
+    fi
     CT_Popd
     CT_EndStep
 }

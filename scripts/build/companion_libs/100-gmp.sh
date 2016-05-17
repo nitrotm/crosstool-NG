@@ -6,6 +6,7 @@ do_gmp_get() { :; }
 do_gmp_extract() { :; }
 do_gmp_for_build() { :; }
 do_gmp_for_host() { :; }
+do_gmp_for_target() { :; }
 
 # Overide functions depending on configuration
 if [ "${CT_GMP}" = "y" ]; then
@@ -74,12 +75,17 @@ do_gmp_backend() {
     local cflags
     local ldflags
     local arg
+    local -a extra_config
 
     for arg in "$@"; do
         eval "${arg// /\\ }"
     done
 
     CT_DoLog EXTRA "Configuring GMP"
+
+    if [ ! "${CT_GMP_5_0_2_or_later}" = "y" ]; then
+        extra_config+=("--enable-mpbsd")
+    fi
 
     CT_DoExecLog CFG                                \
     CFLAGS="${cflags} -fexceptions"                 \
@@ -89,21 +95,21 @@ do_gmp_backend() {
         --host=${host}                              \
         --prefix="${prefix}"                        \
         --enable-fft                                \
-        --enable-mpbsd                              \
         --enable-cxx                                \
         --disable-shared                            \
-        --enable-static
+        --enable-static                             \
+        "${extra_config}"
 
     CT_DoLog EXTRA "Building GMP"
-    CT_DoExecLog ALL make ${JOBSFLAGS}
+    CT_DoExecLog ALL ${make} ${JOBSFLAGS}
 
     if [ "${CT_COMPLIBS_CHECK}" = "y" ]; then
         CT_DoLog EXTRA "Checking GMP"
-        CT_DoExecLog ALL make ${JOBSFLAGS} -s check
+        CT_DoExecLog ALL ${make} ${JOBSFLAGS} -s check
     fi
 
     CT_DoLog EXTRA "Installing GMP"
-    CT_DoExecLog ALL make install
+    CT_DoExecLog ALL ${make} install
 }
 
 fi # CT_GMP
